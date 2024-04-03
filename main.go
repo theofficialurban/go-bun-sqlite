@@ -22,10 +22,17 @@ type Database struct {
 var db *Database = &Database{}
 
 type User struct {
-	ID    int64 `bun:",pk,autoincrement"`
-	Name  string
-	Email string
-	Age   int
+	ID      int64 `bun:",pk,autoincrement"`
+	Name    string
+	Email   string
+	Age     int
+	Profile *Profile `bun:"rel:has-one,join:id=person_id"`
+}
+type Profile struct {
+	ID          int64 `bun:",pk,autoincrement"`
+	DisplayName string
+	Bio         string
+	PersonID    int64
 }
 
 func CTNE[T any]() {
@@ -67,6 +74,12 @@ func GetAll[T any](relation string) *([]T) {
 		return items
 	}
 }
+func GetWhere[T any](cond string, values ...interface{}) *T {
+	b := db.Bun
+	row := new(T)
+	b.NewSelect().Model(row).Where(cond, values...).Scan(context.Background())
+	return row
+}
 func init() {
 	// Creates a SQLite database in `sql.sqlite` file
 	sqldb, err := sql.Open(sqliteshim.DriverName(), "file:sql.sqlite?cache=shared")
@@ -79,7 +92,7 @@ func init() {
 	fmt.Println("Database Setup Complete!")
 
 	CTNE[User]()
-	db.LoadFixtures()
+	CTNE[Profile]()
 
 }
 
@@ -94,4 +107,6 @@ func main() {
 	if err := db.Bun.Ping(); err != nil {
 		panic(err)
 	}
+	u := GetAll[User]("Profile")
+	fmt.Println(u)
 }
