@@ -1,0 +1,6 @@
+- model: User
+  rows:
+    - _id: 123
+      name: "John Smith"
+      age: 25
+      email: "some@some.com"
